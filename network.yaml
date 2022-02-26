@@ -38,7 +38,7 @@ Resources:
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
-      AvailabilityZone: !Select [0, !GetAZs '']
+      AvailabilityZone: !Select [1, !GetAZs '']
       MapPublicIpOnLaunch: False
       VpcId: !Ref VPC
       CidrBlock: 10.0.2.0/24
@@ -96,8 +96,7 @@ Resources:
     Properties:
       RouteTableId: !Ref PrivateRouteTable1
       DestinationCidrBlock: 0.0.0.0/0
-      GatewayId: !Ref NATGW
-
+      NatGatewayId: !Ref NATGW
 
 ...
 # aws cloudformation create-stack --template-body=file://network.yaml --stack-name=network
