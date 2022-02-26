@@ -1,0 +1,104 @@
+---
+Parameters:
+  ProjectName:
+    Description: this is the project name
+    Type: String
+    Default: Udacity
+
+Resources:
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      EnableDnsSupport: true
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-VPC"
+  IGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-IGW"
+  AttachGateway:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref VPC
+      InternetGatewayId: !Ref IGW
+  PublicSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: True
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.1.0/24
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-Public Subnet 1"
+  PrivateSubnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [0, !GetAZs '']
+      MapPublicIpOnLaunch: False
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.2.0/24
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-Private Subnet 1"
+  NATGW:
+    Type: AWS::EC2::NatGateway
+    DependsOn: AttachGateway
+    Properties: 
+      AllocationId: !GetAtt EIP.AllocationId
+      SubnetId: !Ref PublicSubnet1
+      Tags: 
+        - Key: Name
+          Value: !Sub "${ProjectName}-NAT Gateway for Public Subnet 1"
+  EIP:
+    Type: AWS::EC2::EIP
+    Properties:
+      Domain: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-EIP"
+  PublicRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-Public Route Table 1"
+  PrivateRouteTable1:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub "${ProjectName}-Private Route Table 1"
+  PublicRouteTableAssoc1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet1
+      RouteTableId: !Ref PublicRouteTable1
+  PrivateRouteTableAssoc1:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet1
+      RouteTableId: !Ref PrivateRouteTable1
+  PublicInternetRoutes:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PublicRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref IGW
+  PrivateInternetRoutes:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref PrivateRouteTable1
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref NATGW
+
+
+...
+# aws cloudformation create-stack --template-body=file://network.yaml --stack-name=network
+# aws cloudformation update-stack --template-body=file://network.yaml --stack-name=network
