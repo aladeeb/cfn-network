@@ -13,13 +13,13 @@ Resources:
       EnableDnsSupport: true
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-VPC"
+          Value: !Sub ${ProjectName}-VPC
   IGW:
     Type: AWS::EC2::InternetGateway
     Properties:
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-IGW"
+          Value: !Sub ${ProjectName}-IGW
   AttachGateway:
     Type: AWS::EC2::VPCGatewayAttachment
     Properties:
@@ -34,7 +34,7 @@ Resources:
       CidrBlock: 10.0.1.0/24
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-Public Subnet 1"
+          Value: !Sub ${ProjectName}-Public Subnet 1
   PrivateSubnet1:
     Type: AWS::EC2::Subnet
     Properties:
@@ -44,7 +44,7 @@ Resources:
       CidrBlock: 10.0.2.0/24
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-Private Subnet 1"
+          Value: !Sub ${ProjectName}-Private Subnet 1
   NATGW:
     Type: AWS::EC2::NatGateway
     DependsOn: AttachGateway
@@ -53,28 +53,28 @@ Resources:
       SubnetId: !Ref PublicSubnet1
       Tags: 
         - Key: Name
-          Value: !Sub "${ProjectName}-NAT Gateway for Public Subnet 1"
+          Value: !Sub ${ProjectName}-NAT Gateway for Public Subnet 1
   EIP:
     Type: AWS::EC2::EIP
     Properties:
       Domain: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-EIP"
+          Value: !Sub ${ProjectName}-EIP
   PublicRouteTable1:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-Public Route Table 1"
+          Value: !Sub ${ProjectName}-Public Route Table 1
   PrivateRouteTable1:
     Type: AWS::EC2::RouteTable
     Properties:
       VpcId: !Ref VPC
       Tags:
         - Key: Name
-          Value: !Sub "${ProjectName}-Private Route Table 1"
+          Value: !Sub ${ProjectName}-Private Route Table 1
   PublicRouteTableAssoc1:
     Type: AWS::EC2::SubnetRouteTableAssociation
     Properties:
@@ -98,6 +98,20 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NATGW
 
+
+Outputs:
+  VPCID:
+    Description: VPC
+    Value: !Ref VPC
+    Export: 
+      Name: !Sub ${ProjectName}-VPC
+  PrivateSubnet1:
+    Description: Private subnet 1
+    Value: !Ref PrivateSubnet1
+    Export: 
+      Name: !Sub ${ProjectName}-PrivateSubnet1
+
+  
 ...
 # aws cloudformation create-stack --template-body=file://network.yaml --stack-name=network
 # aws cloudformation update-stack --template-body=file://network.yaml --stack-name=network

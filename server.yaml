@@ -1,0 +1,83 @@
+---
+Parameters:
+  ProjectName:
+    Description: this is the project name
+    Type: String
+    Default: Udacity
+
+Resources: 
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupName: WebServerSG
+      GroupDescription: Web Server SG that allows http
+      VpcId: 
+        Fn::ImportValue:
+          !Sub ${ProjectName}-VPC
+      SecurityGroupIngress:
+        IpProtocol: tcp
+        FromPort: 80
+        ToPort: 80
+        CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        IpProtocol: -1
+        FromPort: -1
+        ToPort: -1
+        CidrIp: 0.0.0.0/0
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-Web Server SG
+  WebServer:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-033b95fb8079dc481
+      InstanceType: t2.micro
+      SubnetId: 
+        Fn::ImportValue: 
+          !Sub ${ProjectName}-PrivateSubnet1
+      SecurityGroupIds:
+        - !Ref WebServerSecurityGroup
+      IamInstanceProfile: !Ref IAMInstanceProfile
+      UserData: !Base64 |
+          #!/bin/bash
+          yum update -y
+          yum install -y httpd.x86_64
+          systemctl start httpd.service
+          systemctl enable httpd.service
+          echo “Hello World from $(hostname -f)” > /var/www/html/index.html
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-Web Server
+  IAMRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - ec2.amazonaws.com
+            Action:
+              - sts:AssumeRole
+      Policies: 
+        - 
+         PolicyName: root
+         PolicyDocument:
+           Version: "2012-10-17"
+           Statement:
+              - 
+                Effect: "Allow"
+                Action: "*"
+                Resource: "*"
+  IAMInstanceProfile:
+    Type: AWS::IAM::InstanceProfile
+    Properties:
+      Path: /
+      Roles:
+        - !Ref IAMRole
+
+...
+
+# aws cloudformation create-stack --template-body=file://server.yaml --stack-name=server
+# aws cloudformation update-stack --template-body=file://server.yaml --stack-name=server --capabilities CAPABILITY_NAMED_IAM
