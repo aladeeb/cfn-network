@@ -1,0 +1,76 @@
+---
+Parameters:
+  ProjectName:
+    Description: this is the project name
+    Type: String
+    Default: Udacity
+  DBUsername:
+    Description: username of the db
+    Type: String
+    Default: admin
+  DBPassword:
+    Description: password of the db
+    Type: String
+    Default: adminADMIN
+  DBName:
+    Description: DB Name
+    Type: String
+    Default: UdacityProject
+
+Resources:
+  DatabaseSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: DB subnet group
+      SubnetIds: 
+        - Fn::ImportValue: !Sub ${ProjectName}-PrivateSubnet1
+        - Fn::ImportValue: !Sub ${ProjectName}-PrivateSubnet2
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-Database Subnet Group
+  Database:
+    Type: AWS::RDS::DBInstance
+    DeletionPolicy: Retain
+    Properties:
+      AllocatedStorage: 20
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: true
+      DBInstanceClass: db.t3.medium
+      DBInstanceIdentifier: !Ref DBName
+      DBName: !Ref DBName
+      DBSubnetGroupName: !Ref DatabaseSubnetGroup
+      Engine: MySQL
+      MasterUserPassword: !Ref DBPassword
+      MasterUsername: !Ref DBUsername
+      PubliclyAccessible: false
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-Database
+      UseDefaultProcessorFeatures: false
+      VPCSecurityGroups: [Fn::ImportValue: !Sub "${ProjectName}-Webserver-sg-id"]
+...
+
+# aws cloudformation validate-template --template-body=file://database.yaml
+# aws cloudformation create-stack --template-body=file://database.yaml --stack-name=database
+# aws cloudformation update-stack --template-body=file://database.yaml --stack-name=database 
+
+  # DatabaseSecurityGroup:
+  #   Type: AWS::EC2::SecurityGroup
+  #   Properties:
+  #     GroupDescription: Security group for accessing the database
+  #     SecurityGroupEgress:
+  #       IpProtocol: -1
+  #       FromPort: -1
+  #       ToPort: -1
+  #       CidrIp: 0.0.0.0/0
+  #     SecurityGroupIngress:
+  #       IpProtocol: MYSQL/Aurora
+  #       FromPort: 3306
+  #       ToPort: 3306
+  #       CidrIp: 0.0.0.0/0
+  #     Tags:
+  #       Key: Name
+  #       Value: !Sub ${ProjectName}-Database SG
+  #     VpcId: 
+  #       Fn::ImportValue:
+  #         !Sub ${ProjectName}-VPC
