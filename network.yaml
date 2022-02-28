@@ -45,6 +45,16 @@ Resources:
       Tags:
         - Key: Name
           Value: !Sub ${ProjectName}-Private Subnet 1
+  PrivateSubnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      AvailabilityZone: !Select [2, !GetAZs '']
+      MapPublicIpOnLaunch: False
+      VpcId: !Ref VPC
+      CidrBlock: 10.0.3.0/24
+      Tags:
+        - Key: Name
+          Value: !Sub ${ProjectName}-Private Subnet 2
   NATGW:
     Type: AWS::EC2::NatGateway
     DependsOn: AttachGateway
@@ -85,6 +95,11 @@ Resources:
     Properties:
       SubnetId: !Ref PrivateSubnet1
       RouteTableId: !Ref PrivateRouteTable1
+  PrivateRouteTableAssoc2:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PrivateSubnet2
+      RouteTableId: !Ref PrivateRouteTable1
   PublicInternetRoutes:
     Type: AWS::EC2::Route
     Properties:
@@ -98,7 +113,6 @@ Resources:
       DestinationCidrBlock: 0.0.0.0/0
       NatGatewayId: !Ref NATGW
 
-
 Outputs:
   VPCID:
     Description: VPC
@@ -110,6 +124,11 @@ Outputs:
     Value: !Ref PrivateSubnet1
     Export: 
       Name: !Sub ${ProjectName}-PrivateSubnet1
+  PrivateSubnet2:
+    Description: Private subnet 2
+    Value: !Ref PrivateSubnet2
+    Export: 
+      Name: !Sub ${ProjectName}-PrivateSubnet2
 
   
 ...

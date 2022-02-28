@@ -77,7 +77,19 @@ Resources:
       Roles:
         - !Ref IAMRole
 
+Outputs:
+  WebServerSecurityGroupId:
+    Description: WebServer SG ID
+    Value: !Ref WebServerSecurityGroup
+    Export: 
+      Name: !Sub ${ProjectName}-Webserver-sg-id
+  WebServerSecurityGroupName:
+    Description: WebServer SG Name
+    Value: WebServerSG
+    Export: 
+      Name: !Sub ${ProjectName}-Webserver-sg-name
+
 ...
 
-# aws cloudformation create-stack --template-body=file://server.yaml --stack-name=server
+# aws cloudformation create-stack --template-body=file://server.yaml --stack-name=server --capabilities CAPABILITY_NAMED_IAM
 # aws cloudformation update-stack --template-body=file://server.yaml --stack-name=server --capabilities CAPABILITY_NAMED_IAM
